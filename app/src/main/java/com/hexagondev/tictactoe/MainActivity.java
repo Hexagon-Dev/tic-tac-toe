@@ -9,11 +9,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-    public static boolean pve = false;
     TextView status;
     Button[] buttons = new Button[9];
     public static int counter = 0;
     public int chosenCell;
+    public static boolean pve = false;
     public boolean gameActive = true;
     public boolean isX = Math.random() < 0.5;
     public int[] cells = {2, 2, 2, 2, 2, 2, 2, 2, 2};
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
             initGame();
         });
         findViewById(R.id.button_pvp).setOnClickListener(s -> {
-            MainActivity.pve = true;
+            MainActivity.pve = false;
             setContentView(R.layout.activity_main);
             initGame();
         });
