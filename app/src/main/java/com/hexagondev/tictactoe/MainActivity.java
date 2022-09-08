@@ -1,5 +1,6 @@
 package com.hexagondev.tictactoe;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -8,10 +9,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-
+    public static boolean pve = false;
     TextView status;
     Button[] buttons = new Button[9];
     public static int counter = 0;
+    public int chosenCell;
     public boolean gameActive = true;
     public boolean isX = Math.random() < 0.5;
     public int[] cells = {2, 2, 2, 2, 2, 2, 2, 2, 2};
@@ -21,10 +23,17 @@ public class MainActivity extends AppCompatActivity {
             {0, 4, 8}, {2, 4, 6},
     };
 
-    public void resetGame()
+    public void setEnabledButtons(boolean status)
     {
         for (Button button : buttons) {
-            button.setEnabled(true);
+            button.setEnabled(status);
+        }
+    }
+
+    public void resetGame()
+    {
+        setEnabledButtons(true);
+        for (Button button : buttons) {
             button.setText("");
             button.setBackgroundColor(0xFF494949);
         }
@@ -35,9 +44,28 @@ public class MainActivity extends AppCompatActivity {
         counter = 0;
     }
 
-    @SuppressLint({"SetTextI18n"})
-    public void checkCells() {
-        // Check if any player has won
+    public void addCellClicker(@NonNull Button button, int num) {
+        buttons[num] = button;
+        button.setOnClickListener(v -> {
+            if (!gameActive || button.getText() != "") {
+                return;
+            }
+
+            makeMove(button, num);
+            checkGame();
+
+            if (pve) {
+                generateBotCell();
+                makeMove(buttons[chosenCell], chosenCell);
+            }
+
+            checkGame();
+        });
+    }
+
+    @SuppressLint("SetTextI18n")
+    public void checkGame()
+    {
         for (int[] win : winPositions) {
             if (cells[win[0]] == cells[win[1]] && cells[win[1]] == cells[win[2]] && cells[win[0]] != 2) {
                 gameActive = false;
@@ -56,37 +84,40 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!gameActive) {
-            for (Button button : buttons) {
-                button.setEnabled(false);
-            }
+            setEnabledButtons(false);
         }
     }
 
-    public void addCellClicker(Button button, int num) {
-        buttons[num] = button;
-        button.setOnClickListener(v -> {
-            if (!gameActive || button.getText() != "") {
-                return;
-            }
+    public void generateBotCell() {
+        if (!gameActive) {
+            return;
+        }
 
-            counter++;
-            button.setText(isX ? "X" : "O");
-            isX = !isX;
-            cells[num] = isX ? 0 : 1;
-            status.setText(isX ? "X player:" : "O player:");
-            checkCells();
-        });
+        chosenCell = (int) (Math.random() * 9);
+
+        if (cells[chosenCell] != 2) {
+            generateBotCell();
+        }
     }
 
-    @SuppressLint("SetTextI18n")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public void makeMove(@NonNull Button button, int num)
+    {
+        if (!gameActive) {
+            return;
+        }
 
+        counter++;
+        button.setText(isX ? "X" : "O");
+        isX = !isX;
+        cells[num] = isX ? 0 : 1;
+        status.setText(isX ? "X player:" : "O player:");
+    }
+
+    public void initGame()
+    {
         status = findViewById(R.id.status);
         status.setText(isX ? "X player:" : "O player:");
-        
+
         addCellClicker(findViewById(R.id.button1), 0);
         addCellClicker(findViewById(R.id.button2), 1);
         addCellClicker(findViewById(R.id.button3), 2);
@@ -98,5 +129,32 @@ public class MainActivity extends AppCompatActivity {
         addCellClicker(findViewById(R.id.button9), 8);
 
         findViewById(R.id.reset).setOnClickListener(v -> resetGame());
+        findViewById(R.id.back).setOnClickListener(v -> {
+            resetGame();
+            setContentView(R.layout.activity_start);
+            initMenu();
+        });
+    }
+
+    public void initMenu()
+    {
+        findViewById(R.id.button_pve).setOnClickListener(s -> {
+            MainActivity.pve = true;
+            setContentView(R.layout.activity_main);
+            initGame();
+        });
+        findViewById(R.id.button_pvp).setOnClickListener(s -> {
+            MainActivity.pve = true;
+            setContentView(R.layout.activity_main);
+            initGame();
+        });
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_start);
+
+        initMenu();
     }
 }
